@@ -98,7 +98,7 @@ public class Cs311Project2 {
                         }
                         c = getNextSymbol(word);
                     }else{
-                        System.out.print(c);
+                        System.out.print("@");
                         exit=true;
                     }
                 }else if(next[ptr]!=-1){
