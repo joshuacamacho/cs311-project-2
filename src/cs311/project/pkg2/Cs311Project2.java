@@ -22,27 +22,30 @@ public class Cs311Project2 {
 
     
     private static int[] theswitch = new int[54];
-    private static ArrayList<Character> symbol = new ArrayList<Character>();
-    private static ArrayList<Integer> next = new ArrayList<Integer>();
+    private static char[] symbol = new char[1500];
+    private static int[] next = new int[1500];
     private static int symbolIndex=0;
-    private static boolean keyword=true;
+    private static int wordIndex;
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws FileNotFoundException {
         Arrays.fill(theswitch, -1);
+        Arrays.fill(symbol, '\0');
+        Arrays.fill(next,-1);
         //populate key words
         Scanner filein = new Scanner(new FileInputStream("input1.txt"));
         while(filein.hasNext()){
-            String line = filein.next();
-            System.out.print(line);
-            
-            parseWord(line,'*');
-//            parseWord(line,'*');
+            String word = filein.next();
+            System.out.print(word);
+            parseWord(word+"*");
+//            parseWord(word+"*");
         }
         filein.close();
         System.out.print("\n");
-        
+//        for(int i=0; i<symbolIndex;i++){
+//            System.out.print(symbol[i]);
+//        }
         //parse through java file
         filein = new Scanner(new FileInputStream("input2.txt"));
         while(filein.hasNext()){
@@ -54,38 +57,74 @@ public class Cs311Project2 {
                 line = line.replaceAll(";|\\{|\\}|\\(.*\\)|[0-9]", "");
                 String[] split = line.split(" |\\.");
                 for(int i=0; i<split.length; i++){
-                        System.out.print(split[i]);
-                        parseWord(split[i],'?');
-                        System.out.print(" ");
-                    
+                    if(!split[i].matches("\\s*")){
+                       System.out.print(split[i]);
+                        parseWord(split[i]+"?");
+                        System.out.print(" "); 
+                    }
                 }
                 System.out.print("\n");
             }
         }
         
         
-        for(char i : symbol){
-            System.out.print(i);
-        }
+   
     }
-    
-    private static void parseWord(String line,char ending) {
-        if(line == null || line.length()==0) return;
-        int position = 0;
-        char c = line.charAt(position);
-        int switchIndex = indexOfSwitch(c);
-        if(switchIndex < 0) return;
-        //check if switch array has a starting position in symbol
-        if(theswitch[switchIndex]==-1){
-            theswitch[switchIndex]= symbolIndex;
-            //one letter check
-            if(line.length()== 1) insertNewIntoSymbol("",ending);
-            else insertNewIntoSymbol(line.substring(1),ending);
-        } else {
-            if(line.length()== 1) insertIntoSymbol("",theswitch[switchIndex],ending);
-            else insertIntoSymbol(line.substring(1),theswitch[switchIndex],ending);
-        }
+
+    private static void parseWord(String word) {
+        wordIndex=0;
+        char c = getNextSymbol(word);
+        if(indexOfSwitch(c)==-1) return;
+        int ptr = theswitch[indexOfSwitch(c)];
+        if(ptr == -1){
+           theswitch[indexOfSwitch(c)]=symbolIndex;
+           create(word.substring(wordIndex));
+        }else{
+            // theswitch contains the starting letter
+            boolean exit = false;
+            c = getNextSymbol(word);
+            while(!exit){
+                if(symbol[ptr]==c){
+                    if(c!='*' && c!='?'){
+                        ptr = ptr + 1;
+                        if(wordIndex == word.length()-1){
+                            if(symbol[ptr]=='*'){
+                                System.out.print("*");
+                                exit = true;
+                            }else if(symbol[ptr]=='?'){
+                                System.out.print("@");
+                                exit = true;
+                            }
+                        }
+                        c = getNextSymbol(word);
+                    }else{
+                        System.out.print(c);
+                        exit=true;
+                    }
+                }else if(next[ptr]!=-1){
+                    ptr = next[ptr];
+                }else{
+                    next[ptr]=symbolIndex;
+                    create(word.substring(wordIndex-1));
+                    exit=true;
+                }
+            }//while
+        }//if
         
+    }
+
+    private static char getNextSymbol(String word) {
+        char c = word.charAt(wordIndex);
+        wordIndex++;
+        return c;
+    }
+
+    private static void create(String word) {
+        for(int i=0; i<word.length();i++){
+            symbol[symbolIndex]=word.charAt(i);
+            symbolIndex++;
+        }
+        if(word.charAt(word.length()-1)=='?') System.out.print("?");
     }
     
     private static int indexOfSwitch(char c) {
@@ -99,80 +138,6 @@ public class Cs311Project2 {
         if(c=='$') return 52;
         if(c=='_') return 53;
         return -1;
-    }
-
-    private static void insertNewIntoSymbol(String line, char ending) {
-        for(int i=0; i<line.length(); i++){
-            symbol.add(symbolIndex, line.charAt(i));
-            next.add(null);
-            symbolIndex++;
-        }
-        symbol.add(symbolIndex, ending);
-        System.out.print(ending);
-        next.add(null);
-        symbolIndex++;
-    }
-
-    private static void insertIntoSymbol(String word,int start, char ending) {
-        if(word.length()==0) return;
-        int count=0;
-        for(int i=start; i<symbol.size();i++){
-            
-            //if part of word is already in symbol
-            if(word.charAt(count)==symbol.get(i)){
-                
-                
-                //if word is completely in symbol
-                if(count == word.length()-1){
-                    if(symbol.get(i+1)=='*'){
-                            System.out.print("*");
-                            return;
-                    }
-                    if(symbol.get(i+1)=='?' && ending=='?'){
-                        System.out.print("@");
-                        return;
-                    }
-//                    if(i==symbol.size()-1) insertNewIntoSymbol("",ending);
-                    
-                        int pos = i+1;
-                        
-                        while(true){
-                           if(ending != symbol.get(pos)){
-                                if(next.get(pos)==null){
-                                    next.add(pos,symbolIndex);
-                                    insertNewIntoSymbol("",ending);
-                                    return;
-                                }else{
-                                    pos = next.get(pos);
-                                }
-                            }else{
-                              //ending matches
-                              if(ending =='?') System.out.print("@");
-                              else System.out.print("*");
-                              return; 
-                           }
-                        }
-                        
-                    
-                    
-                }
-                count++;
-                //then continues for loop
-            }else{
-                //if next is not set, insert word starting at free buffer
-                if(next.get(i)==null){
-                    next.add(i, symbolIndex);
-                    insertNewIntoSymbol(word.substring(count),ending);
-                    break;
-                //if next IS set, insert substring starting at new position
-                } else {
-                    insertIntoSymbol(word.substring(count),next.get(i),ending);
-                    return;
-                }
-            }
-        }
-        
-        
     }
     
 }
