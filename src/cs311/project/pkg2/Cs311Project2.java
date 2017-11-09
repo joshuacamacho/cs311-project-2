@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package cs311.project.pkg2;
 
 import java.io.FileInputStream;
@@ -14,16 +9,12 @@ import java.util.Scanner;
 
 /**
  *
- * @author Josh
+ * @author Joshua Camacho
  */
 public class Cs311Project2 {
-
-    
-
-    
     private static int[] theswitch = new int[54];
-    private static char[] symbol = new char[1500];
-    private static int[] next = new int[1500];
+    private static char[] symbol = new char[1200];
+    private static int[] next = new int[1200];
     private static int symbolIndex=0;
     private static int wordIndex;
     /**
@@ -37,40 +28,95 @@ public class Cs311Project2 {
         Scanner filein = new Scanner(new FileInputStream("input1.txt"));
         while(filein.hasNext()){
             String word = filein.next();
-            System.out.print(word);
+//          System.out.print(word);
             parseWord(word+"*");
-//            parseWord(word+"*");
+//          parseWord(word+"*");
         }
         filein.close();
         System.out.print("\n");
-//        for(int i=0; i<symbolIndex;i++){
-//            System.out.print(symbol[i]);
-//        }
+      
         //parse through java file
         filein = new Scanner(new FileInputStream("input2.txt"));
         while(filein.hasNext()){
             String line = filein.nextLine();
-            //filter out comment lines
-            if(line.matches("^\\s*/.*") || line.matches("^\\s*\\*.*")){
-//                System.out.println("COMMENT LINE "+ line);
-            }else{
-                line = line.replaceAll(";|\\{|\\}|\\(.*\\)|[0-9]", "");
-                String[] split = line.split(" |\\.");
+            //filter out symbols we dont care
+            line = line.replaceAll("[\\.;{}()\\[\\]\\/\"<>=*+,:&]", " ");
+                
+                String[] split = line.split(" ");
                 for(int i=0; i<split.length; i++){
-                    if(!split[i].matches("\\s*")){
+                    if(!split[i].matches("\\s*") && !split[i].matches("[0-9]+")){
                        System.out.print(split[i]);
                         parseWord(split[i]+"?");
                         System.out.print(" "); 
                     }
                 }
                 System.out.print("\n");
-            }
+            
         }
         
+        //Print out Switch
+        System.out.print("       ");
+        for(int i=0; i<20; i++){
+            System.out.printf("%4c ",(char)getCharValueOf(i));
+        }
+        System.out.print("\n Switch:");
+        for(int i=0; i<20; i++){
+            System.out.printf("%4d ",theswitch[i]); 
+        }
+        System.out.print("\n       ");
+        for(int i=20; i<40; i++){
+            System.out.printf("%4c ",(char)getCharValueOf(i));
+        }
+        System.out.print("\n Switch:");
+        for(int i=20; i<40; i++){
+            System.out.printf("%4d ",theswitch[i]); 
+        }
+        System.out.print("\n       ");
+        for(int i=40; i<theswitch.length; i++){
+            System.out.printf("%4c ",(char)getCharValueOf(i)); 
+        }
+        System.out.print("\n Switch:");
+        for(int i=40; i<theswitch.length; i++){
+            System.out.printf("%4d ",theswitch[i]); 
+        }
+        
+        
+        //Print out Symbol / next
+        int start=0;
+        int j=20;
+        boolean exit=false;
+        while(true){
+            System.out.print("\n\n       ");
+            for(int i = start; i<j;i++){
+                System.out.printf("%4d ",i);
+            }
+            System.out.print("\nSymbol:");
+            for(int i = start; i<j;i++){
+                System.out.printf("%4c ", symbol[i]);
+            }
+            System.out.print("\n  Next:");
+            for(int i = start; i<j;i++){
+                System.out.printf("%4d ",next[i]);
+            }            
+            if(exit) break;
+            start=j;
+            j+=20;
+
+            if(j>symbol.length) {
+                j=symbol.length;
+                exit=true;
+            }
+            
+        }
+        
+//          for(int i=0; i<symbolIndex;i++){
+//            System.out.print(symbol[i]);
+//        }
         
    
     }
 
+    //Main Algorithm
     private static void parseWord(String word) {
         wordIndex=0;
         char c = getNextSymbol(word);
@@ -126,6 +172,15 @@ public class Cs311Project2 {
         }
         if(word.charAt(word.length()-1)=='?') System.out.print("?");
     }
+    
+    private static int getCharValueOf(int i){
+        if(i<26) return i + 65;
+        if(i<52) return i + 65 + 6;
+        if(i==52) return Character.valueOf('$');
+        if(i==53) return Character.valueOf('_');
+        return -1;
+    }
+    
     
     private static int indexOfSwitch(char c) {
         if(Character.isAlphabetic(c)){
